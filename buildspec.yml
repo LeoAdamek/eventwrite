@@ -1,0 +1,28 @@
+##
+# Build Spec for AWS CodeBuild
+#
+# Builds & Pushes Docker images for the Service
+---
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging into ECR
+      - $(aws ecr get-login --no-include-email --region eu-west-1)
+      - REPO_URI=205331266135.dkr.ecr.eu-west-1.amazonaws.com/eventwrite
+      - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-8)
+      - IMAGE_TAG=${COMMIT_HASH:=latest}
+  build:
+    commands:
+      - docker build -t assetzen-service:latest .
+      - docker tag assetzen-service:latest ${REPO_URI}:${IMAGE_TAG}
+      - docker tag assetzen-service:latest ${REPO_URI}:latest
+  post_build:
+    commands:
+      - docker push ${REPO_URI}:${IMAGE_TAG}
+      - docker push ${REPO_URI}:latest
+      - printf '{"ImageURI":"%s","ImageTags":["%s"]}' $REPO_URI:$IMAGE_TAG $IMAGE_TAG > imageDetail.json
+
+artifacts:
+  files: imageDetail.json

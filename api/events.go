@@ -28,7 +28,7 @@ func (a API) eventsHandler(c *gin.Context) {
 	for _, ev := range e.Events {
 
 		ev.ID = events.ID(ksuid.Next())
-		ev.Source = "NONE"
+		ev.Source = c.MustGet("source_id").(string)
 
 		a.log.Debug("Got event", zap.Any("event", e))
 
@@ -46,5 +46,5 @@ func (a API) eventsHandler(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusAccepted, e)
+	c.JSON(http.StatusAccepted, gin.H{"msg": "OK"})
 }

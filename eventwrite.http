@@ -4,15 +4,21 @@
 ####
 POST {{host}}/events
 Content-Type: application/json
-
+X-Api-Key: test
 
 {
-    "name": "test_event",
-    "timestamp": "{{$datetime iso8601}}",
-    "metrics": {
-        "ttl": 0.03
-    },
-    "attributes": {
-        "test": "true"
-    }
+    "events": [
+        {
+            "name": "page_load",
+            "url": "http://example.com/",
+            "timestamp": "{{$datetime iso8601}}",
+            "metrics": {
+                "load_time_total_us": 19029
+            },
+            "attributes": {
+                "test": "true",
+                "client_addr": "192.168.0.1"
+            }
+        }
+    ]
 }

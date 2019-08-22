@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"bitbucket.org/mr-zen/eventwrite/api"
+	"bitbucket.org/mr-zen/eventwrite/logging"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"
 )
@@ -14,8 +15,8 @@ func init() {
 }
 
 func main() {
-	logger, _ := zap.NewDevelopment()
 
+	logger := logging.GetLogger()
 	app, err := api.New(logger)
 
 	if err != nil {

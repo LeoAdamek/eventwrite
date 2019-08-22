@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"net/http"
 	"time"
 
 	"bitbucket.org/mr-zen/eventwrite/events"
@@ -37,6 +38,9 @@ func New(logger *zap.Logger) (*API, error) {
 	a.flushDst = sink
 
 	a.engine = gin.New()
+
+	a.engine.Use(a.auth)
+
 	a.engine.POST("/events", a.eventsHandler)
 
 	go a.flushPeriodically()
@@ -44,11 +48,13 @@ func New(logger *zap.Logger) (*API, error) {
 	return a, nil
 }
 
-// Mux gets the HTTP mux for the server
-func (a *API) Engine() *gin.Engine {
+// Engine gets the HTTP mux for the server
+func (a *API) Engine() http.Handler {
 	return a.engine
 }
 
+// Flushes out any events that havn't been recorded every so often,
+// used for periods of low activity.
 func (a API) flushPeriodically() {
 	t := time.NewTicker(10 * time.Second)
 
