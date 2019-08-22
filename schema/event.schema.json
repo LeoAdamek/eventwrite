@@ -1,0 +1,39 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema",
+    "$id": "Event",
+    "description": "Event",
+    
+    "type":"object",
+    "additionalProperties": false,
+
+    "required": ["timestamp","name"],
+
+    "properties": {
+        "timestamp": {
+            "type": "string",
+            "format": "datetime",
+            "description": "Event timestamp"
+        },
+
+        "name": {
+            "type": "string",
+            "description": "Event name"
+        },
+
+        "metrics": {
+            "type": "object",
+            "additionalProperties": {
+                "type": "number",
+                "description": "Metric values"
+            }
+        },
+
+        "attributes": {
+            "type": "object",
+            "additionalProperties": {
+                    "type": "string",
+                    "description": "attribute value"
+            }
+        }
+    }
+}

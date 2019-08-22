@@ -1,0 +1,18 @@
+@host = http://localhost:8885
+
+
+####
+POST {{host}}/events
+Content-Type: application/json
+
+
+{
+    "name": "test_event",
+    "timestamp": "{{$datetime iso8601}}",
+    "metrics": {
+        "ttl": 0.03
+    },
+    "attributes": {
+        "test": "true"
+    }
+}

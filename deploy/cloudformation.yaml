@@ -1,0 +1,204 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: |-
+  Eventwrite
+
+Parameters:
+  StreamShards:
+    Type: Number
+    MinValue: "1"
+    MaxValue: "100000"
+    Default: "1"
+    Description: |-
+      Number of shards to use for event stream.
+      More shards increases throughput but increases cost.
+
+
+Resources:
+
+  EventStream:
+    Type: AWS::Kinesis::Stream
+    Properties:
+      ShardCount: !Ref StreamShards
+
+  EventBucket:
+    Type: AWS::S3::Bucket
+    Properties: {}
+
+  FirehoseRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          Effect: Allow
+          Action: ['sts:AssumeRole']
+          Principal:
+            Service: firehose.amazonaws.com
+          # Only allow kinesis within the same account to gain this role
+          Condition:
+            StringEquals:
+              "sts:ExternalId": !Sub "${AWS::AccountId}"
+      Policies:
+      - PolicyName: !Sub "${AWS::StackName}-Firehose-Policy"
+        PolicyDocument:
+          Version: 2012-10-17
+          Statement:
+            - Effect: Allow
+              Action:
+                - glue:GetTableVersion
+                - glue:GetTableVersions
+              Resource:
+                - !Join [':', ['arn:aws:glue', !Ref "AWS::Region", !Ref "AWS::AccountId", 'catalog']]
+                - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:database/${GlueDB}"
+                - !Sub "arn:aws:glue:${AWS::Region}:${AWS::AccountId}:table/${GlueDB}/${GlueTable}"
+            - Effect: Allow
+              Action: 
+                - s3:PutObject
+                - s3:GetBucketLocation
+                - s3:AbortMultipartUpload
+                - s3:GetBucketLocation
+                - s3:ListBucketMultipartUploads
+              Resource:
+                - !Join ['', ["arn:aws:s3:::", !Ref EventBucket, "/events/*"]]
+                - !Join ['', ["arn:aws:s3:::", !Ref EventBucket, "/errors/*"]]
+                - !Join ['', ["arn:aws:s3:::", !Ref EventBucket]]
+            - Effect: Allow
+              Action:
+                - kinesis:DescribeStream
+                - kinesis:GetRecords
+                - kinesis:GetShardIterator
+                - kinesis:DeleteRecords
+              Resource:
+                - !GetAtt EventStream.Arn
+  
+  GlueDB:
+    Type: AWS::Glue::Database
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseInput:
+        Name: !Join ['_', [!Ref "AWS::StackName", "db"]]
+        Description: Glue database for Eventwrite
+  
+  GlueTable:
+    Type: AWS::Glue::Table
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseName: !Ref GlueDB
+      TableInput:
+        Description: Eventwrite Events
+        Name: events
+        PartitionKeys:
+          - Type: string
+            Name: source_id
+        TableType: EXTERNAL_TABLE
+        StorageDescriptor:
+          Location: !Join ['/', ['s3:/', !Ref EventBucket, 'events']]
+          Columns:
+            - Name: source_id
+              Type: string
+              Comment: Event Source
+            - Name: id
+              Type: string
+              Comment: Event ID
+            - Name: timestamp
+              Type: timestamp
+              Comment: Event timestamp
+            - Name: name
+              Type: string
+              Comment: Event type Name
+            - Name: url
+              Type: string
+              Comment: Event URL
+            - Name: metrics
+              Type: map<string,float>
+              Comment: Event metrics
+            - Name: attributes
+              Type: map<string,string>
+              Comment: Event attributes
+
+
+  Firehose:
+    Type: AWS::KinesisFirehose::DeliveryStream
+    Properties:
+      DeliveryStreamType: KinesisStreamAsSource
+      KinesisStreamSourceConfiguration:
+        KinesisStreamARN: !GetAtt EventStream.Arn
+        RoleARN: !GetAtt FirehoseRole.Arn
+      ExtendedS3DestinationConfiguration:
+        BucketARN: !Join ['', ['arn:aws:s3:::', !Ref EventBucket]]
+        RoleARN: !GetAtt FirehoseRole.Arn
+        Prefix: "events/"
+        ErrorOutputPrefix: "errors/"
+        CompressionFormat: UNCOMPRESSED
+        BufferingHints:
+          IntervalInSeconds: 300
+          SizeInMBs: 128
+        DataFormatConversionConfiguration:
+          Enabled: true
+          InputFormatConfiguration:
+            Deserializer:
+              HiveJsonSerDe: {}
+                # TimestampFormats:
+                #   - YYYY-MM-ddTHH:mm:ssZ
+          OutputFormatConfiguration:
+            Serializer:
+              OrcSerDe: {}
+          SchemaConfiguration:
+            CatalogId: !Ref AWS::AccountId
+            Region: !Ref AWS::Region
+            DatabaseName: !Ref GlueDB
+            TableName: !Ref GlueTable
+            RoleARN: !GetAtt FirehoseRole.Arn
+            VersionId: LATEST
+
+  # DynamoDB Table used for storing API credentials (possibly other stuff in future)
+  ApplicationTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+
+  ApplicationRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: ['sts:AssumeRole']
+            Principal:
+              Service: 'ecs-tasks.amazonaws.com'
+      Policies:
+        - PolicyName: KinesisAccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - kinesis:DescribeStream
+                  - kinesis:PutRecord*
+                Resource:
+                  - !GetAtt EventStream.Arn
+        - PolicyName: DynamoAccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:Query
+                  - dynamodb:Scan
+                  - dynamodb:Get*
+                Resource:
+                  - !GetAtt ApplicationTable.Arn
+  
+
+Outputs: {}
