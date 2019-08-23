@@ -1,7 +1,9 @@
-@host = http://localhost:8885
+@host = http://event-Appli-Y77JO2155CXN-447739554.eu-west-1.elb.amazonaws.com
 
 
-####
+###
+# Send Events
+#
 POST {{host}}/events
 Content-Type: application/json
 X-Api-Key: test
@@ -19,6 +21,24 @@ X-Api-Key: test
                 "test": "true",
                 "client_addr": "192.168.0.1"
             }
+        },
+        {
+            "name": "page_load",
+            "url": "http://example.com/test",
+            "timestamp": "{{$datetime iso8601}}",
+            "metrics": {
+                "load_time_total_us": 129894859
+            },
+            "attributes": {
+                "test": "true",
+                "client_addr": "192.168.1.1"
+            }
         }
     ]
 }
+
+
+###
+# TEST
+GET {{host}}/
+X-Api-Key: test

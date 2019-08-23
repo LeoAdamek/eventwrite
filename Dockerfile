@@ -10,6 +10,8 @@ RUN go build -v -o /usr/local/bin/eventwrite
 FROM alpine:3.8
 LABEL maintainer "Leo Adamek <leo.adamek@mrzen.com>"
 
+RUN apk add --no-cache ca-certificates
+
 RUN adduser -SH eventwrite
 EXPOSE 8080
 
