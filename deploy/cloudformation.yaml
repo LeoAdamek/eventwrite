@@ -11,10 +11,31 @@ Parameters:
     Description: |-
       Number of shards to use for event stream.
       More shards increases throughput but increases cost.
+  AppCluster:
+    Type: String
+    Description: ECS Cluster to Deploy to
+  AppScale:
+    Type: Number
+    MinValue: "2"
+    Default: "2"
+    Description: Desired running app instance count.
   VPC:
     Type: AWS::EC2::VPC::Id
-    Default: vpc-58cd9a31
-
+    Description: >
+      ID of the VPC to create resources within
+  LBSubnets:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: >
+      Subnets for load balancer
+  AppSubnets:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: >
+      Subnets for application.
+  AppImage:
+    Type: String
+    Description: >
+      URL for docker repository/image for application
+    Default: 205331266135.dkr.ecr.eu-west-1.amazonaws.com/eventwrite:latest
 
 Resources:
 
@@ -231,7 +252,7 @@ Resources:
       Memory: "512"
       ContainerDefinitions:
         - Name: "eventwrite"
-          Image: 205331266135.dkr.ecr.eu-west-1.amazonaws.com/eventwrite:latest
+          Image: !Ref AppImage
           Environment:
             - Name: AWS_REGION
               Value: !Ref "AWS::Region"
@@ -282,9 +303,7 @@ Resources:
       Scheme: internet-facing
       Type: application
       Subnets:
-        - subnet-20f7a049
-        - subnet-5ecd9a37
-        - subnet-88c89fe1
+        - !Ref LBSubnets
       SecurityGroups:
         - !Ref LoadBalancerSG
 
@@ -330,18 +349,16 @@ Resources:
     DependsOn: [LBListener, LogGroup]
     Properties:
       TaskDefinition: !Ref AppTaskDefinition
-      Cluster: mrzen-internal
-      DesiredCount: 2
+      Cluster: !Ref AppCluster
+      DesiredCount: !Ref AppScale
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
-          AssignPublicIp: ENABLED
+          # AssignPublicIp: ENABLED | DISABLED
           SecurityGroups:
             - !Ref ApplicationSG
           Subnets:
-            - subnet-20f7a049
-            - subnet-5ecd9a37
-            - subnet-88c89fe1
+            - !Ref AppSubnets
       LoadBalancers:
         - ContainerName: "eventwrite"
           ContainerPort: 8080
