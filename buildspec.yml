@@ -8,16 +8,18 @@ version: 0.2
 phases:
   pre_build:
     commands:
+      - AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
+      - echo AWS Account $AWS_ACCOUNT_ID
       - echo Logging into ECR
       - $(aws ecr get-login --no-include-email --region eu-west-1)
-      - REPO_URI=205331266135.dkr.ecr.eu-west-1.amazonaws.com/eventwrite
+      - REPO_URI=$AWS_ACCONT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/eventwrite
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-8)
       - IMAGE_TAG=${COMMIT_HASH:=latest}
   build:
     commands:
-      - docker build -t assetzen-service:latest .
-      - docker tag assetzen-service:latest ${REPO_URI}:${IMAGE_TAG}
-      - docker tag assetzen-service:latest ${REPO_URI}:latest
+      - docker build -t eventwrite:latest .
+      - docker tag eventwrite:latest ${REPO_URI}:${IMAGE_TAG}
+      - docker tag eventwrite:latest ${REPO_URI}:latest
   post_build:
     commands:
       - docker push ${REPO_URI}:${IMAGE_TAG}
