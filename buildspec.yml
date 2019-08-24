@@ -11,11 +11,8 @@ phases:
       docker: 18
   pre_build:
     commands:
-      - AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
-      - echo AWS Account $AWS_ACCOUNT_ID
-      - echo Logging into ECR
       - $(aws ecr get-login --no-include-email --region eu-west-1)
-      - REPO_URI=$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/eventwrite
+      - REPO_URI=$REPOSITORY_URL
       - COMMIT_HASH=$(echo $CODEBUILD_RESOLVED_SOURCE_VERSION | cut -c 1-8)
       - IMAGE_TAG=${COMMIT_HASH:=latest}
   build:

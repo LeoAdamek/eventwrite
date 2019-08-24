@@ -49,6 +49,10 @@ Resources:
       ServiceRole: !GetAtt BuildRole.Arn
       Artifacts: {Type: NO_ARTIFACTS}
       Environment:
+        EnvironmentVariables:
+          - Name: REPOSITORY_URL
+            Type: PLAINTEXT
+            Value: !Sub "${AWS::AccountId}.dkr.${AWS::Region}.amazonaws.com/${DockerRepo}"
         ComputeType: BUILD_GENERAL1_SMALL
         PrivilegedMode: yes
         Image: aws/codebuild/standard:2.0-1.12.0
