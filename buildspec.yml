@@ -6,6 +6,9 @@
 version: 0.2
 
 phases:
+  install:
+    runtime-versions:
+      docker: 18
   pre_build:
     commands:
       - AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query 'Account' --output text)
