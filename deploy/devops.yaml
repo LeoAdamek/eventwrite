@@ -2,7 +2,6 @@ AWSTemplateFormatVersion: 2010-09-09
 Description: |-
   Development & Deployment Pipeline for Eventwrite
 
-
 Resources:
 
   DockerRepo:
@@ -34,10 +33,16 @@ Resources:
                 Resource:  '*'
                 Action:
                  - ecr:GetAuthorizationToken
+                 - ecr:ListImages
               - Effect: Allow
                 Resource:
                   - !GetAtt DockerRepo.Arn
                 Action:
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:DescribeImages
+                  - ecr:BatchGetImage
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:GetRepositoryPolicy
                   - ecr:InitiateLayerUpload
                   - ecr:UploadLayerPart
                   - ecr:CompleteLayerUpload
@@ -52,12 +57,16 @@ Resources:
         EnvironmentVariables:
           - Name: REPOSITORY_URL
             Type: PLAINTEXT
-            Value: !Sub "${AWS::AccountId}.dkr.${AWS::Region}.amazonaws.com/${DockerRepo}"
+            Value: !Sub "${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${DockerRepo}"
         ComputeType: BUILD_GENERAL1_SMALL
         PrivilegedMode: yes
         Image: aws/codebuild/standard:2.0-1.12.0
-        Type: LINUX_CONTAINER
-      Source:
+        Type: LINUX_CONTAINER 
+      Cache:
+        Type: LOCAL
+        Modes:
+          - LOCAL_DOCKER_LAYER_CACHE
+      Source: 
         Type: GITHUB
         Location: https://github.com/LeoAdamek/eventwrite
     
