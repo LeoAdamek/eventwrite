@@ -4,6 +4,10 @@ ENV CGO_ENABLED 0
 RUN mkdir /usr/src/app
 WORKDIR /usr/src/app
 
+COPY go.mod .
+COPY go.sum .
+RUN go get
+
 COPY . .
 RUN go build -v -o /usr/local/bin/eventwrite
 
