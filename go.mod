@@ -8,6 +8,7 @@ require (
 	github.com/gin-gonic/gin v1.4.0
 	github.com/guregu/dynamo v1.3.1
 	github.com/pkg/errors v0.8.1 // indirect
+	github.com/prometheus/client_golang v0.9.3
 	github.com/spf13/viper v1.4.0
 	go.uber.org/zap v1.10.0
 	golang.org/x/net v0.0.0-20190522155817-f3200d17e092

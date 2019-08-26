@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"bitbucket.org/mr-zen/eventwrite/events"
+	"bitbucket.org/mr-zen/eventwrite/internal/metrics"
 	"github.com/LeoAdamek/ksuid"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -24,6 +25,9 @@ func (a API) eventsHandler(c *gin.Context) {
 		c.AbortWithStatus(http.StatusBadRequest)
 		return
 	}
+
+	// Count the events as received
+	metrics.EventsReceivedTotal.Add(float64(len(e.Events)))
 
 	for _, ev := range e.Events {
 

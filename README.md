@@ -46,3 +46,5 @@ The following cost-free resources will also be created:
 * Security groups
 * IAM roles & polices
 
+A second template is provided to create the resources for building and creating
+docker images to feed the application deployment.

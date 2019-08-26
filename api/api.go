@@ -36,11 +36,10 @@ func New(logger *zap.Logger) (*API, error) {
 	sink.StreamName = viper.GetString("stream_name")
 
 	a.flushDst = sink
-
 	a.engine = gin.New()
 
+	// All other routes use auth
 	a.engine.Use(a.auth)
-
 	a.engine.POST("/events", a.eventsHandler)
 
 	go a.flushPeriodically()

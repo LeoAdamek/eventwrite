@@ -4,16 +4,23 @@ import (
 	"context"
 	"encoding/json"
 
+	"bitbucket.org/mr-zen/eventwrite/internal/metrics"
 	"github.com/LeoAdamek/ksuid"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kinesis"
+	"github.com/prometheus/client_golang/prometheus"
 )
 
 // KinesisSink records events to an AWS Kinesis Data Stream
 type KinesisSink struct {
 	StreamName string
 	client     *kinesis.Kinesis
+
+	metrics struct {
+		eventsPushedTotal prometheus.Counter
+		eventsFailedTotal prometheus.Counter
+	}
 }
 
 // NewKinesisSink creates a new Kinesis event sink
@@ -27,10 +34,14 @@ func NewKinesisSink(cfg *aws.Config) (*KinesisSink, error) {
 
 	kc := kinesis.New(s)
 
-	return &KinesisSink{
+	sink := &KinesisSink{
 		client: kc,
-	}, nil
+	}
 
+	sink.metrics.eventsPushedTotal = metrics.EventsPushedTotal.WithLabelValues("kinesis")
+	sink.metrics.eventsFailedTotal = metrics.EventsErrorTotal.WithLabelValues("kinesis")
+
+	return sink, nil
 }
 
 // RecordEvents records the events to the Kinesis Stream
@@ -55,8 +66,12 @@ func (k KinesisSink) RecordEvents(ctx context.Context, events []Event) error {
 
 	input.Records = entries
 
-	if _, err := k.client.PutRecordsWithContext(ctx, input); err != nil {
+	if res, err := k.client.PutRecordsWithContext(ctx, input); err != nil {
+		k.metrics.eventsFailedTotal.Add(float64(nEvents))
 		return err
+	} else {
+		k.metrics.eventsFailedTotal.Add(float64(*res.FailedRecordCount))
+		k.metrics.eventsPushedTotal.Add(float64(nEvents - int(*res.FailedRecordCount)))
 	}
 
 	return nil

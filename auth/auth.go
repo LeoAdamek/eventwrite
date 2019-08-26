@@ -5,7 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 
-	"bitbucket.org/mr-zen/eventwrite/logging"
+	"bitbucket.org/mr-zen/eventwrite/internal/logging"
 	"go.uber.org/zap"
 
 	"github.com/aws/aws-sdk-go/aws/session"

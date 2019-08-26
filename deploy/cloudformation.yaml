@@ -31,14 +31,15 @@ Parameters:
     Type: List<AWS::EC2::Subnet::Id>
     Description: >
       Subnets for application.
-  AppImage:
+  ImageTag:
     Type: String
+    Default: latest
     Description: >
-      URL for docker repository/image for application
-    Default: 205331266135.dkr.ecr.eu-west-1.amazonaws.com/eventwrite:latest
-
+      Docker Image tag to deploy of the image.
+      Expects the image to be located in ECR in the same account and region
+      as this stack.
+      
 Resources:
-
   EventStream:
     Type: AWS::Kinesis::Stream
     Properties:
@@ -173,7 +174,7 @@ Resources:
             DatabaseName: !Ref GlueDB
             TableName: !Ref GlueTable
             RoleARN: !GetAtt FirehoseRole.Arn
-            VersionId: LATEST
+            VersionId: LATEST 
 
   # DynamoDB Table used for storing API credentials (possibly other stuff in future)
   ApplicationTable:
@@ -252,7 +253,7 @@ Resources:
       Memory: "512"
       ContainerDefinitions:
         - Name: "eventwrite"
-          Image: !Ref AppImage
+          Image: !Sub ["${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/${RepoName}:${ImageTag}", {RepoName: !ImportValue eventwrite-ecr-repo-name}]
           Environment:
             - Name: AWS_REGION
               Value: !Ref "AWS::Region"
@@ -302,9 +303,8 @@ Resources:
       IpAddressType: dualstack
       Scheme: internet-facing
       Type: application
-      Subnets:
-        - !Ref LBSubnets
-      SecurityGroups:
+      Subnets: !Ref LBSubnets
+      SecurityGroups: !
         - !Ref LoadBalancerSG
 
   LBListener:
@@ -354,16 +354,13 @@ Resources:
       LaunchType: FARGATE
       NetworkConfiguration:
         AwsvpcConfiguration:
-          # AssignPublicIp: ENABLED | DISABLED
+          AssignPublicIp: ENABLED # DISABLED
           SecurityGroups:
             - !Ref ApplicationSG
-          Subnets:
-            - !Ref AppSubnets
+          Subnets: !Ref AppSubnets
       LoadBalancers:
         - ContainerName: "eventwrite"
           ContainerPort: 8080
           TargetGroupArn: !Ref ApplicationTG
-
-
 
 Outputs: {}
