@@ -71,7 +71,7 @@ func (k KinesisSink) RecordEvents(ctx context.Context, events []Event) error {
 		return err
 	} else {
 		k.metrics.eventsFailedTotal.Add(float64(*res.FailedRecordCount))
-		k.metrics.eventsPushedTotal.Add(float64(nEvents - int(*res.FailedRecordCount)))
+		k.metrics.eventsPushedTotal.Add(float64(len(res.Records)))
 	}
 
 	return nil
