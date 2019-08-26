@@ -1,4 +1,5 @@
-@host = http://event-Appli-Y77JO2155CXN-447739554.eu-west-1.elb.amazonaws.com
+@host = http://event-appli-1ihr1c66xr1ce-1603930988.eu-west-1.elb.amazonaws.com
+#  @host = http://localhost:8080
 
 
 ###
@@ -10,6 +11,20 @@ X-Api-Key: test
 
 {
     "events": [
+        {
+            "name": "test_event",
+            "url": "",
+            "timestamp": "{{$datetime iso8601}}",
+            "metrics": {
+                "some_metric": 0,
+                "some_other_metric": 1
+            },
+            "attributes": {
+                "test": "true",
+                "some_other_key": "some_other_value",
+                "uuid": "{{$guid}}"
+            }
+        },
         {
             "name": "page_load",
             "url": "http://example.com/",
