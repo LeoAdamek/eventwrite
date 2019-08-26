@@ -40,14 +40,43 @@ Parameters:
       as this stack.
       
 Resources:
+  EncryptionKey:
+    Type: AWS::KMS::Key
+    Properties:
+      Description: !Sub "Encryption key for Eventwrite, used by stack \"${AWS::StackName}\""
+      Enabled: true
+      EnableKeyRotation: true
+      KeyPolicy:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Join [':', ['arn:aws:iam:', !Ref "AWS::AccountId", 'root']]
+            Action: 'kms:*'
+            Resource: '*'
+
+  KeyAlias:
+    Type: AWS::KMS::Alias
+    Properties:
+      AliasName: !Sub "alias/eventwrite-${AWS::StackName}-key"
+      TargetKeyId: !Ref EncryptionKey
+
   EventStream:
     Type: AWS::Kinesis::Stream
     Properties:
       ShardCount: !Ref StreamShards
+      StreamEncryption:
+        EncryptionType: KMS
+        KeyId: !GetAtt EncryptionKey.Arn
 
   EventBucket:
     Type: AWS::S3::Bucket
     Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: 'aws:kms'
+              KMSMasterKeyID: !GetAtt EncryptionKey.Arn
       # Block all public access to the bucket
       PublicAccessBlockConfiguration:
         BlockPublicAcls: true
@@ -74,6 +103,15 @@ Resources:
         PolicyDocument:
           Version: 2012-10-17
           Statement:
+            - Effect: Allow
+              Action:
+                - kms:Decrypt
+                - kms:Encrypt
+                - kms:ReEncrypt
+                - kms:DescribeKey
+                - kms:GenerateDataKey
+              Resource:
+                - !GetAtt EncryptionKey.Arn
             - Effect: Allow
               Action:
                 - glue:GetTableVersion
@@ -209,6 +247,15 @@ Resources:
             Principal:
               Service: 'ecs-tasks.amazonaws.com'
       Policies:
+        - PolicyName: KMSAccess
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - kms:GenerateDataKey
+                Resource:
+                  - !GetAtt EncryptionKey.Arn
         - PolicyName: KinesisAccess
           PolicyDocument:
             Version: 2012-10-17
