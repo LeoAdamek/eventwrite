@@ -9,6 +9,11 @@
     "required": ["timestamp","name"],
 
     "properties": {
+        "id": {
+            "type": "string",
+            "readOnly": true,
+            "description": "Event ID. Assigned automatically."
+        },
         "timestamp": {
             "type": "string",
             "format": "datetime",
@@ -18,6 +23,11 @@
         "name": {
             "type": "string",
             "description": "Event name"
+        },
+        
+        "url": {
+            "type": "string",
+            "description": "Event URL"
         },
 
         "metrics": {
