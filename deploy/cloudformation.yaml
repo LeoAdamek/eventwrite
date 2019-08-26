@@ -327,6 +327,12 @@ Resources:
           FromPort: 8080
           ToPort: 8080
           IpProtocol: tcp
+          Description: App Service
+        - CidrIp: 0.0.0.0/0
+          FromPort: 9200
+          ToPort: 9200
+          IpProtocol: tcp
+          Description: Prometheus
 
   ApplicationTG:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
