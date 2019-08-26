@@ -47,7 +47,13 @@ Resources:
 
   EventBucket:
     Type: AWS::S3::Bucket
-    Properties: {}
+    Properties:
+      # Block all public access to the bucket
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
 
   FirehoseRole:
     Type: AWS::IAM::Role
