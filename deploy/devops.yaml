@@ -24,6 +24,11 @@ Resources:
             Version: 2012-10-17
             Statement:
               - Effect: Allow
+                Action:
+                  - codecommit:GitPull
+                Resource:
+                  - !Sub "arn:aws:codecommit:${AWS::Region}:${AWS::AccountId}:eventwrite"
+              - Effect: Allow
                 Resource: ['*']
                 Action:
                   - logs:PutLogEvents
@@ -67,8 +72,8 @@ Resources:
         Modes:
           - LOCAL_DOCKER_LAYER_CACHE
       Source: 
-        Type: GITHUB
-        Location: https://github.com/LeoAdamek/eventwrite
+        Type: CODECOMMIT
+        Location: https://git-codecommit.eu-west-1.amazonaws.com/v1/repos/eventwrite
     
 Outputs:
   RepoName:
