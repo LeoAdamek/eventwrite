@@ -24,17 +24,23 @@ func (b Buffer) Events() chan<- Event {
 // Flush will flush out the buffer to persistent storage
 func (b *Buffer) Flush(ctx context.Context, dst Sink) error {
 
-	events := make([]Event, 10)
+	var events []Event
 
 	// Read (up to) 10 events
 	for i := 0; i < 10; i++ {
 		select {
 		case event := <-b.events:
-			events[i] = event
+			// Only include real events.
+			if event.Name != "" {
+				events = append(events, event)
+			}
 		default:
 			break
 		}
 	}
 
-	return dst.RecordEvents(ctx, events)
+	// Flush events in background
+	go dst.RecordEvents(ctx, events)
+
+	return nil
 }
