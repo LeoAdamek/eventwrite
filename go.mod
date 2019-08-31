@@ -1,4 +1,4 @@
-module bitbucket.org/mr-zen/eventwrite
+module github.com/LeoAdamek/eventwrite
 
 go 1.12
 

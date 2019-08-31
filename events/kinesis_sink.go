@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"bitbucket.org/mr-zen/eventwrite/internal/metrics"
+	"github.com/LeoAdamek/eventwrite/internal/metrics"
 	"github.com/LeoAdamek/ksuid"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"

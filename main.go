@@ -3,8 +3,8 @@ package main
 import (
 	"net/http"
 
-	"bitbucket.org/mr-zen/eventwrite/api"
-	"bitbucket.org/mr-zen/eventwrite/internal/logging"
+	"github.com/LeoAdamek/eventwrite/api"
+	"github.com/LeoAdamek/eventwrite/internal/logging"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"

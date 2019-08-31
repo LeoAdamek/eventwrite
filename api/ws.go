@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io"
 
-	"bitbucket.org/mr-zen/eventwrite/events"
+	"github.com/LeoAdamek/eventwrite/events"
 	"go.uber.org/zap"
 	"golang.org/x/net/websocket"
 )

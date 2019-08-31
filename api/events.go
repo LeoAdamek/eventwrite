@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"bitbucket.org/mr-zen/eventwrite/events"
-	"bitbucket.org/mr-zen/eventwrite/internal/metrics"
+	"github.com/LeoAdamek/eventwrite/events"
+	"github.com/LeoAdamek/eventwrite/internal/metrics"
 	"github.com/LeoAdamek/ksuid"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"

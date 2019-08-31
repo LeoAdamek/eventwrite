@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"bitbucket.org/mr-zen/eventwrite/events"
+	"github.com/LeoAdamek/eventwrite/events"
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 	"go.uber.org/zap"

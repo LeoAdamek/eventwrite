@@ -3,7 +3,7 @@ package api
 import (
 	"net/http"
 
-	"bitbucket.org/mr-zen/eventwrite/auth"
+	"github.com/LeoAdamek/eventwrite/auth"
 	"github.com/gin-gonic/gin"
 )
 
